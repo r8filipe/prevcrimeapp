@@ -146,7 +146,7 @@ angular.module('starter')
 
             };
             $scope.submit = function () {
-                $scope.data.user = AuthService.user_id();
+                //$scope.data.user = AuthService.user_id();
                 if ($scope.data.event == 0 || $scope.data.length <= 4 || $scope.photo.length != 0) {
                     $cordovaDialogs.alert('Campos não preenchidos', 'Formulário', 'OK')
                         .then(function () {
