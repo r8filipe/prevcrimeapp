@@ -1,0 +1,62 @@
+<ion-view view-title="Reportar" name="report-view">
+    <ion-nav-buttons side="right" class="bar-positive">
+        <button class="button icon-left ion-help button-stable" ng-click="helpMe()">Ajuda</button>
+    </ion-nav-buttons>
+    <ion-content>
+        <div class="padding" style="margin-top:60px; overflow-y:scroll;">
+            <label class="item item-input">
+                <input type="text" placeholder="Rua" ng-model="data.address">
+            </label>
+            <label class="item item-input">
+                <input type="text" placeholder="Coordenadas" ng-model="data.coordenadas"
+                       ng-model-options="{ getterSetter: true }">
+            </label>
+            <label class="item item-input item-select">
+                <div class="input-label">
+                    Local
+                </div>
+                <select ng-model="data.local" id="local">
+                    <option value="1">Residencial</option>
+                    <option value="2">Escolas/locais com jovens</option>
+                    <option value="3">Comercial/industrial/escritórios</option>
+                    <option value="4">Comercial/retalho</option>
+                    <option value="5">Parques e jardins públicos</option>
+                    <option value="6">Centros de lazer</option>
+                    <option value="7">Outros</option>
+                </select>
+            </label>
+            <label class="item item-input item-select">
+                <div class="input-label">
+                    Categoria
+                </div>
+                <select ng-model="data.category" id="categoria">
+                    <option value="1">Acessibilidade</option>
+                    <option value="2">Condições Ambientais</option>
+                    <option value="3">Controlo e Vigilância</option>
+                    <option value="4">Estrutura de Espaços</option>
+                    <option value="5">Visibilidade</option>
+                </select>
+            </label>
+            <label class="item item-input item-select">
+                <div class="input-label">
+                    Sub-Categoria
+                </div>
+                <select ng-model="data.event" id="subcategoria">
+
+                </select>
+            </label>
+            <label class="item item-input">
+                <textarea placeholder="Observações" name="observacoes" ng-model="data.obs"></textarea>
+            </label>
+            <div>
+                <div class="text-left" id="placehere" ng-bind-html="photo">
+                    <!--<img id="imageFile" src="" width="160px" height="auto"/>-->
+                </div>
+                <div class="text-right">
+                    <button class="button icon ion-camera" ng-click="takePhoto();"></button>
+                </div>
+            </div>
+            <button class="button button-assertive button-block" ng-click="submit();">Submeter</button>
+        </div>
+    </ion-content>
+</ion-view>
