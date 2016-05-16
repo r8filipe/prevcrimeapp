@@ -1,4 +1,4 @@
-<ion-view view-title="Mapa" name="map-view" >
+<ion-view view-title="Mapa" name="map-view">
     <ion-nav-buttons side="right">
         <button class="button icon-left ion-power button-stable left" ng-click="logout()">Logout</button>
         <span class="backspace-outline"></span>
@@ -8,6 +8,13 @@
     <ion-content>
         <div>
             <div id="map"></div>
+            <div class="float-button">
+              <span>
+                <a class="content" id="pure-button">
+                    <i class="ion-location" ng-click="reloadRoute();"> </i>
+                </a>
+              </span>
+            </div>
         </div>
     </ion-content>
 </ion-view>

@@ -39,20 +39,28 @@
     color: blue;
     background: white;
 }
-.content:active{
+
+.content:active {
     background: none;
 }
 
+.customPopup {
+    position: absolute;
+    bottom: 0;
+    height: 45vh;
+}
+
 /* Portrait */
-@media screen and (orientation:portrait) {
-    #map{
+@media screen and (orientation: portrait) {
+    #map {
         height: 85vh;
         width: auto;
     }
 }
+
 /* Landscape */
-@media screen and (orientation:landscape) {
-    #map{
+@media screen and (orientation: landscape) {
+    #map {
         height: 72vh;
         width: auto;
     }

@@ -1,6 +1,6 @@
 angular.module('starter')
 
-    .service('AuthService', function($q, $http, USER_ROLES) {
+    .service('AuthService', function ($q, $http, USER_ROLES, $ionicPopup, CONFIG) {
         var LOCAL_TOKEN_KEY = 'yourTokenKey';
         var username = '';
         var isAuthenticated = false;
@@ -43,23 +43,37 @@ angular.module('starter')
             window.localStorage.removeItem(LOCAL_TOKEN_KEY);
         }
 
-        var login = function(name, pw) {
-            return $q(function(resolve, reject) {
-                if ((name == 'admin' && pw == '1') || (name == 'user' && pw == '1')) {
-                    // Make a request and receive your auth token from your server
-                    storeUserCredentials(name + '.yourServerToken');
-                    resolve('Login success.');
-                } else {
-                    reject('Login Failed.');
-                }
+        var login = function (name, pw) {
+
+            return $q(function (resolve, reject) {
+
+                var data = {login_pass: pw, login_string: name};
+
+                $.post(CONFIG.hostname + "/auth/ajax_attempt_login", data).then(function successCallback(response) {
+                    console.log(angular.toJson(response.data));
+                    if (response.data.status == '1') {
+                        storeUserCredentials(name + '.yourServerToken');
+                        resolve('Login success.');
+
+                    } else {
+                        reject('Login Failed.');
+                    }
+
+                }, function errorCallback(response) {
+                    var alertPopup = $ionicPopup.alert({
+                        title: 'Session Lost!',
+                        template: angular.toJson(response)
+                    });
+
+                });
             });
         };
 
-        var logout = function() {
+        var logout = function () {
             destroyUserCredentials();
         };
 
-        var isAuthorized = function(authorizedRoles) {
+        var isAuthorized = function (authorizedRoles) {
             if (!angular.isArray(authorizedRoles)) {
                 authorizedRoles = [authorizedRoles];
             }
@@ -72,9 +86,15 @@ angular.module('starter')
             login: login,
             logout: logout,
             isAuthorized: isAuthorized,
-            isAuthenticated: function() {return isAuthenticated;},
-            username: function() {return username;},
-            role: function() {return role;}
+            isAuthenticated: function () {
+                return isAuthenticated;
+            },
+            username: function () {
+                return username;
+            },
+            role: function () {
+                return role;
+            }
         };
     })
 

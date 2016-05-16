@@ -1,7 +1,7 @@
 angular.module('starter')
 
     .constant('CONFIG', {
-        hostname: 'http://prevcrimeapp.ufp.pt/',
+        hostname: 'http://prevcrimeapp.fvinha.pt/',
         map_center_lat: '41.194292',
         map_center_lng: '-8.643424',
         default_lang: 'portuguese',

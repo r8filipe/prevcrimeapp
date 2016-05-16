@@ -39,7 +39,7 @@ angular.module('starter')
         };
     })
 
-    .controller('MapCtrl', function ($scope, $ionicPlatform, $state, AuthService, CONFIG) {
+    .controller('MapCtrl', function ($scope, $ionicPlatform, $state, AuthService, CONFIG, $ionicPopup) {
         $ionicPlatform.ready(function () {
 
             $scope.logout = function () {
@@ -47,6 +47,13 @@ angular.module('starter')
                 $state.go('login');
             };
 
+            $scope.helpMe = function () {
+                var alertPopup = $ionicPopup.alert({
+                    title: 'Ajuda',
+                    template: '-Duplo click no mapa para reportar posição <br/>' +
+                    '-Clique no botão inferior direito para centrar mapa na posição aproximada'
+                });
+            };
 
             var marker;
 
@@ -55,17 +62,16 @@ angular.module('starter')
                 minZoom: 5,
                 zoom: CONFIG.map_zoom,
             });
-            map.locate({setView: true, maxZoom: 18});
 
             L.tileLayer('http://{s}.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="http://osm.org/copyright" title="OpenStreetMap" target="_blank">OpenStreetMap</a> contributors | Tiles Courtesy of <a href="http://www.mapquest.com/" title="MapQuest" target="_blank">MapQuest</a> <img src="http://developer.mapquest.com/content/osm/mq_logo.png" width="16" height="16">',
                 subdomains: ['otile4']
             }).addTo(map);
 
-            map.addControl(new L.Control.Gps({autoActive: true}));//inizialize control
+            map.locate({setView: true, maxZoom: 18});
 
-            map.on('dblclick', onMapDblClick);
-            map.on('click', onMapClick);
+            // map.on('dblclick', onMapDblClick);
+            map.on('dblclick', onMapClick);
 
             function onMapDblClick(e) {
                 window.location = "#/main/form/" + e.latlng.lat + '/' + e.latlng.lng;
@@ -77,9 +83,30 @@ angular.module('starter')
 
                 } else {
                     marker.setLatLng([e.latlng.lat, e.latlng.lng]);
+
+
                 }
-                map.setView(new L.LatLng(e.latlng.lat, e.latlng.lng), 18);
+
+                map.panTo(e.latlng, {animate: true, duration: 5.0});
+
+                var confirmPopup = $ionicPopup.confirm({
+                    title: 'Reportar',
+                    template: 'Confirma a posição?',
+                    cssClass: 'customPopup',
+                    okText: 'Confirmo', // String (default: 'OK'). The text of the OK button.
+                });
+
+                confirmPopup.then(function (res) {
+                    if (res) {
+                        window.location = "#/main/form/" + e.latlng.lat + '/' + e.latlng.lng;
+
+                    }
+                });
             }
+
+            $scope.reloadRoute = function () {
+                map.locate({setView: true, maxZoom: 20});
+            };
 
         });
     })
@@ -87,9 +114,15 @@ angular.module('starter')
     .controller('FormCtrl', function ($scope, $ionicPlatform, $cordovaFile,
                                       $cordovaCamera, $cordovaFileTransfer,
                                       $ionicPopup, $http, $stateParams,
-                                      $cordovaNetwork, $cordovaDialogs, CONFIG, AuthService) {
+                                      $cordovaNetwork, $cordovaDialogs, CONFIG) {
         $ionicPlatform.ready(function () {
 
+            $scope.helpMe = function () {
+                var alertPopup = $ionicPopup.alert({
+                    title: 'Ajuda',
+                    template: '-Permitido fazer upload 3 imagens pela aplicação, poderá posteriormente editar o evento e adicionar novas fotografias'
+                });
+            };
             $scope.photo = [];
             $scope.image = [];
             $scope.data = {};
@@ -147,7 +180,8 @@ angular.module('starter')
             };
             $scope.submit = function () {
                 //$scope.data.user = AuthService.user_id();
-                if ($scope.data.event == 0 || $scope.data.length <= 4 || $scope.photo.length != 0) {
+                // if ($scope.data.event == 0 || $scope.data.length <= 4 || $scope.photo.length != 0) {
+                if ($scope.data.event == 0 || $scope.data.length <= 4) {
                     $cordovaDialogs.alert('Campos não preenchidos', 'Formulário', 'OK')
                         .then(function () {
                             return;

@@ -23,8 +23,10 @@ angular.module('starter', ['ionic', 'ngMockE2E', 'ngCordova'])
         });
     })
 
-    .config(function ($ionicConfigProvider) {
+    .config(function ($ionicConfigProvider, $httpProvider) {
         $ionicConfigProvider.tabs.position("bottom");
+        $httpProvider.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded;charset=utf-8';
+
     })
 
     .config(function ($stateProvider, $urlRouterProvider, USER_ROLES) {
