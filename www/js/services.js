@@ -44,33 +44,35 @@ angular.module('starter')
         }
 
         var login = function (name, pw) {
-
             return $q(function (resolve, reject) {
+                $.get(CONFIG.hostname + "/webservice/jar").then(function successCallback(response) {
+                    var token = response;
+                    console.log(response);
+                    var data = {login_pass: pw, login_string: name, login_token: token};
 
-                var data = {login_pass: pw, login_string: name};
+                    $.post(CONFIG.hostname + "/auth/ajax_attempt_login", data).then(function successCallback(response) {
+                        if (response.status == 'success') {
+                            // Make a request and receive your auth token from your server
+                            storeUserCredentials(name + '.yourServerToken');
+                            resolve('Login success.');
 
-                $.post(CONFIG.hostname + "/auth/ajax_attempt_login", data).then(function successCallback(response) {
-                    console.log(angular.toJson(response.data));
-                    if (response.data.status == '1') {
-                        storeUserCredentials(name + '.yourServerToken');
-                        resolve('Login success.');
+                        } else {
+                            reject('Login Failed.');
+                        }
 
-                    } else {
+                    }, function errorCallback(response) {
                         reject('Login Failed.');
-                    }
-
-                }, function errorCallback(response) {
-                    var alertPopup = $ionicPopup.alert({
-                        title: 'Session Lost!',
-                        template: angular.toJson(response)
                     });
-
+                }, function errorCallback(response) {
                 });
             });
         };
-
         var logout = function () {
             destroyUserCredentials();
+            $.get(CONFIG.hostname + "/auth/logout").then(function successCallback(response) {
+            }, function errorCallback(response) {
+            });
+
         };
 
         var isAuthorized = function (authorizedRoles) {
