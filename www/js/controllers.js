@@ -114,7 +114,7 @@ angular.module('starter')
     .controller('FormCtrl', function ($scope, $ionicPlatform, $cordovaFile,
                                       $cordovaCamera, $cordovaFileTransfer,
                                       $ionicPopup, $http, $stateParams,
-                                      $cordovaNetwork, $cordovaDialogs, CONFIG) {
+                                      $cordovaNetwork, $cordovaDialogs, CONFIG, AuthService) {
         $ionicPlatform.ready(function () {
 
             $scope.helpMe = function () {
@@ -126,6 +126,7 @@ angular.module('starter')
             $scope.photo = [];
             $scope.image = [];
             $scope.data = {};
+            $scope.data.user = AuthService.user();
 
             if ($stateParams.lat != undefined) {
                 $http.get('http://nominatim.openstreetmap.org/reverse?format=json&lat=' + $stateParams.lat + '&lon=' + $stateParams.lng + '&zoom=18&addressdetails=1')
@@ -133,19 +134,19 @@ angular.module('starter')
                         $scope.stories = angular.fromJson(response.address);
                         if ($scope.stories.road != undefined) {
                             $scope.data.address = $scope.stories.road;
-                            $scope.data.address += ' , ';
+                            $scope.data.address += ', ';
                         }
                         if ($scope.stories.city_district != undefined) {
                             $scope.data.address += $scope.stories.city_district;
-                            $scope.data.address += ' , ';
+                            $scope.data.address += ', ';
                         }
                         if ($scope.stories.county != undefined) {
                             $scope.data.address += $scope.stories.county;
-                            $scope.data.address += ' , ';
+                            $scope.data.address += ', ';
                         }
                         if ($scope.stories.postcode != undefined) {
                             $scope.data.address += $scope.stories.postcode;
-                            $scope.data.address += ' , ';
+                            $scope.data.address += ', ';
                         }
                         if ($scope.stories.country != undefined) {
                             $scope.data.address += $scope.stories.country;

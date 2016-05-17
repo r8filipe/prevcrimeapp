@@ -6,6 +6,7 @@ angular.module('starter')
         var isAuthenticated = false;
         var role = '';
         var authToken;
+        var user;
 
         function loadUserCredentials() {
             var token = window.localStorage.getItem(LOCAL_TOKEN_KEY);
@@ -20,16 +21,13 @@ angular.module('starter')
         }
 
         function useCredentials(token) {
-            username = token.split('.')[0];
+            username = token.split('.')[1];
+            user = token.split('.')[0];
             isAuthenticated = true;
             authToken = token;
 
-            if (username == 'admin') {
-                role = USER_ROLES.admin
-            }
-            if (username == 'user') {
-                role = USER_ROLES.public
-            }
+            role = USER_ROLES.public
+
 
             // Set the token as header for your requests!
             $http.defaults.headers.common['X-Auth-Token'] = token;
@@ -38,6 +36,7 @@ angular.module('starter')
         function destroyUserCredentials() {
             authToken = undefined;
             username = '';
+            user = '';
             isAuthenticated = false;
             $http.defaults.headers.common['X-Auth-Token'] = undefined;
             window.localStorage.removeItem(LOCAL_TOKEN_KEY);
@@ -47,13 +46,12 @@ angular.module('starter')
             return $q(function (resolve, reject) {
                 $.get(CONFIG.hostname + "/webservice/jar").then(function successCallback(response) {
                     var token = response;
-                    console.log(response);
                     var data = {login_pass: pw, login_string: name, login_token: token};
 
                     $.post(CONFIG.hostname + "/auth/ajax_attempt_login", data).then(function successCallback(response) {
                         if (response.status == 'success') {
                             // Make a request and receive your auth token from your server
-                            storeUserCredentials(name + '.yourServerToken');
+                            storeUserCredentials(response.user_id + '.' + name + '.yourServerToken');
                             resolve('Login success.');
 
                         } else {
@@ -93,6 +91,9 @@ angular.module('starter')
             },
             username: function () {
                 return username;
+            },
+            user: function () {
+                return user;
             },
             role: function () {
                 return role;
