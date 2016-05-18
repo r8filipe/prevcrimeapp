@@ -182,11 +182,12 @@ angular.module('starter')
             $scope.submit = function () {
                 //$scope.data.user = AuthService.user_id();
                 // if ($scope.data.event == 0 || $scope.data.length <= 4 || $scope.photo.length != 0) {
-                if ($scope.data.event == 0 || $scope.data.length <= 4) {
-                    $cordovaDialogs.alert('Campos não preenchidos', 'Formulário', 'OK')
-                        .then(function () {
-                            return;
-                        });
+                if ($scope.data.event == 0 || $scope.data.length <= 3) {
+
+                    var alertPopup = $ionicPopup.alert({
+                        title: 'Formulário',
+                        template: 'Campos não preenchidos.'
+                    });
 
                 } else {
                     $http({
@@ -201,21 +202,24 @@ angular.module('starter')
                             angular.forEach($scope.image, function (value) {
                                 uploadFile(value, response.data.event);
                             });
-                            $cordovaDialogs.alert('Foi reportado com sucesso a sua ocorrência', 'Ocorrência', 'OK')
-                                .then(function () {
-                                    window.location = "#/map/";
-                                });
 
+                            var alertPopup = $ionicPopup.alert({
+                                title: 'Ocorrência',
+                                template: 'Foi reportado com sucesso a sua ocorrência'
+                            });
+                            state.go('main.map');
                         } else {
-                            $cordovaDialogs.alert(angular.toJson(response), 'Ocorrência', 'OK')
-                                .then(function () {
-                                });
+                            var alertPopup = $ionicPopup.alert({
+                                title: 'Ocorrência',
+                                template: 'Erro ao reportar, preencha todo os campos'
+                            });
                         }
 
                     }, function errorCallback(response) {
-                        $cordovaDialogs.alert(response.data.message, 'Erro ao Reportar', 'OK')
-                            .then(function () {
-                            });
+                        var alertPopup = $ionicPopup.alert({
+                            title: 'Ocorrência',
+                            template: 'Erro no servidor, tente novamente mais tarde'
+                        });
                     });
                 }
             };
@@ -235,9 +239,10 @@ angular.module('starter')
 
                     }, function (error) {
 
-                        $cordovaDialogs.alert("Erro ao enviar imagem", 'Fotogafia', 'OK')
-                            .then(function () {
-                            });
+                        var alertPopup = $ionicPopup.alert({
+                            title: 'Fotogafia',
+                            template: 'Erro ao enviar imagem'
+                        });
                     });
             }
 
@@ -259,7 +264,7 @@ angular.module('starter')
                 };
                 var ambiente = {
                     3: 'Lixo disperso',
-                    4: 'Degradação habitaçional',
+                    4: 'Degradação habitacional',
                     5: 'Degradação das áreas públicas comuns',
                     6: 'Sinais de Vandalismo/Vandalismo'
                 };

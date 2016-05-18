@@ -50,6 +50,29 @@
     height: 45vh;
 }
 
+.popup {
+}
+
+.popup-head {
+    background-color: #0c60ee;
+}
+
+.popup-title {
+    color: white;
+}
+
+.popup-body {
+    background-color: white;
+}
+
+.popup-buttons .button {
+    background-color: #007aff;
+}
+
+.popup-buttons .button.activated {
+    background-color: #0078A8;
+}
+
 /* Portrait */
 @media screen and (orientation: portrait) {
     #map {
