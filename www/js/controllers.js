@@ -73,18 +73,12 @@ angular.module('starter')
             // map.on('dblclick', onMapDblClick);
             map.on('dblclick', onMapClick);
 
-            function onMapDblClick(e) {
-                window.location = "#/main/form/" + e.latlng.lat + '/' + e.latlng.lng;
-            }
-
             function onMapClick(e) {
                 if (marker == undefined) {
                     marker = L.marker([e.latlng.lat, e.latlng.lng]).addTo(map)
 
                 } else {
                     marker.setLatLng([e.latlng.lat, e.latlng.lng]);
-
-
                 }
 
                 map.panTo(e.latlng, {animate: true, duration: 5.0});
@@ -105,7 +99,7 @@ angular.module('starter')
             }
 
             $scope.reloadRoute = function () {
-                map.locate({setView: true, maxZoom: 20});
+                map.locate({setView: true, Zoom: 18});
             };
 
         });
@@ -114,7 +108,7 @@ angular.module('starter')
     .controller('FormCtrl', function ($scope, $ionicPlatform, $cordovaFile,
                                       $cordovaCamera, $cordovaFileTransfer,
                                       $ionicPopup, $http, $stateParams,
-                                      $cordovaNetwork, $cordovaDialogs, CONFIG, AuthService) {
+                                      $cordovaNetwork, $cordovaDialogs, CONFIG, AuthService, $cordovaNetwork) {
         $ionicPlatform.ready(function () {
 
             $scope.helpMe = function () {
@@ -190,37 +184,80 @@ angular.module('starter')
                     });
 
                 } else {
-                    $http({
-                        method: 'get',
-                        url: CONFIG.hostname + 'webservice/report',
-                        params: $scope.data
-                    }).then(function successCallback(response) {
-                        if (response.data.status != 'FAIL') {
-                            var id = response.data.event;
+                    var isOnline = $cordovaNetwork.isOnline();
+                    if (isOnline) {
+                        $http({
+                            method: 'get',
+                            url: CONFIG.hostname + 'webservice/report',
+                            params: $scope.data
+                        }).then(function successCallback(response) {
+                            if (response.data.status != 'FAIL') {
+                                var id = response.data.event;
 
-                            //uploadFile($scope.image, response.data.event);
-                            angular.forEach($scope.image, function (value) {
-                                uploadFile(value, response.data.event);
-                            });
+                                //uploadFile($scope.image, response.data.event);
+                                angular.forEach($scope.image, function (value) {
+                                    uploadFile(value, response.data.event);
+                                });
 
+                                var alertPopup = $ionicPopup.alert({
+                                    title: 'Ocorrência',
+                                    template: 'Foi reportado com sucesso a sua ocorrência'
+                                });
+                                state.go('main.map');
+                            } else {
+                                var alertPopup = $ionicPopup.alert({
+                                    title: 'Ocorrência',
+                                    template: 'Erro ao reportar, preencha todo os campos'
+                                });
+                            }
+
+                        }, function errorCallback(response) {
                             var alertPopup = $ionicPopup.alert({
                                 title: 'Ocorrência',
-                                template: 'Foi reportado com sucesso a sua ocorrência'
+                                template: 'Erro no servidor, tente novamente mais tarde'
                             });
-                            state.go('main.map');
-                        } else {
-                            var alertPopup = $ionicPopup.alert({
-                                title: 'Ocorrência',
-                                template: 'Erro ao reportar, preencha todo os campos'
-                            });
-                        }
-
-                    }, function errorCallback(response) {
-                        var alertPopup = $ionicPopup.alert({
-                            title: 'Ocorrência',
-                            template: 'Erro no servidor, tente novamente mais tarde'
                         });
-                    });
+                    } else {
+
+                        $cordovaFile.checkFile(cordova.file.applicationStorageDirectory, "prevcrimeapp.txt")
+                            .then(function (success) {
+                                $cordovaFile.writeExistingFile(cordova.file.applicationStorageDirectory, "prevcrimeapp.txt", '\n' + angular.toJson($scope.data))
+                                    .then(function (success) {
+                                        var alertPopup = $ionicPopup.alert({
+                                            title: 'Modo offline',
+                                            template: 'A ocorrencia foi reportada em modo offline, quando tiver ligação será enviado para o servidor, onde terá de confirmar os dados 1'
+                                        });
+                                    }, function (error) {
+                                        var alertPopup = $ionicPopup.alert({
+                                            title: 'Modo offline',
+                                            template: 'Erro ao reportar em modo offline, tente novamente 1'
+                                        });
+                                    });
+
+                            }, function (error) {
+                                $cordovaFile.createFile(cordova.file.applicationStorageDirectory, "prevcrimeapp.txt", true)
+                                    .then(function (success) {
+                                        $cordovaFile.writeFile(cordova.file.applicationStorageDirectory, "prevcrimeapp.txt", '\n' + angular.toJson($scope.data), true)
+                                            .then(function (success) {
+                                                var alertPopup = $ionicPopup.alert({
+                                                    title: 'Modo offline',
+                                                    template: error + 'A ocorrencia foi reportada em modo offline, quando tiver ligação será enviado para o servidor, onde terá de confirmar os dados 2'
+                                                });
+                                            }, function (error) {
+                                                var alertPopup = $ionicPopup.alert({
+                                                    title: 'Modo offline',
+                                                    template: 'Erro ao reportar em modo offline, tente novamente 2'
+                                                });
+                                            });
+                                    }, function (error) {
+                                        var alertPopup = $ionicPopup.alert({
+                                            title: 'Modo offline',
+                                            template: 'Erro ao reportar em modo offline, tente novamente 3'
+                                        });
+                                    });
+                            });
+
+                    }
                 }
             };
 

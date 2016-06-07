@@ -1,6 +1,6 @@
 angular.module('starter')
 
-    .service('AuthService', function ($q, $http, USER_ROLES, $ionicPopup, CONFIG) {
+    .service('AuthService', function ($q, $http, USER_ROLES, $ionicPopup, CONFIG, $cordovaNetwork) {
         var LOCAL_TOKEN_KEY = 'yourTokenKey';
         var username = '';
         var isAuthenticated = false;
@@ -43,27 +43,37 @@ angular.module('starter')
         }
 
         var login = function (name, pw) {
-            return $q(function (resolve, reject) {
-                $.get(CONFIG.hostname + "/webservice/jar").then(function successCallback(response) {
-                    var token = response;
-                    var data = {login_pass: pw, login_string: name, login_token: token};
 
-                    $.post(CONFIG.hostname + "/auth/ajax_attempt_login", data).then(function successCallback(response) {
-                        if (response.status == 'success') {
-                            // Make a request and receive your auth token from your server
-                            storeUserCredentials(response.user_id + '.' + name + '.yourServerToken');
-                            resolve('Login success.');
+            var isOnline = $cordovaNetwork.isOnline();
+            if (isOnline) {
+                return $q(function (resolve, reject) {
+                    $.get(CONFIG.hostname + "/webservice/jar").then(function successCallback(response) {
+                        var token = response;
+                        var data = {login_pass: pw, login_string: name, login_token: token};
 
-                        } else {
+                        $.post(CONFIG.hostname + "/auth/ajax_attempt_login", data).then(function successCallback(response) {
+                            if (response.status == 'success') {
+                                // Make a request and receive your auth token from your server
+                                storeUserCredentials(response.user_id + '.' + name + '.yourServerToken');
+                                resolve('Login success.');
+
+                            } else {
+                                reject('Login Failed.');
+                            }
+
+                        }, function errorCallback(response) {
                             reject('Login Failed.');
-                        }
-
+                        });
                     }, function errorCallback(response) {
-                        reject('Login Failed.');
                     });
-                }, function errorCallback(response) {
                 });
-            });
+            } else {
+                return $q(function (resolve, reject) {
+                    storeUserCredentials('0000' + '.' + 'demo' + '.yourServerToken');
+                    resolve('Login success.');
+                });
+            }
+
         };
         var logout = function () {
             destroyUserCredentials();
