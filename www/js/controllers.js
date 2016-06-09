@@ -39,7 +39,7 @@ angular.module('starter')
         };
     })
 
-    .controller('MapCtrl', function ($scope, $ionicPlatform, $state, AuthService, CONFIG, $ionicPopup) {
+    .controller('MapCtrl', function ($scope, $ionicPlatform, $state, AuthService, CONFIG, $ionicPopup, $cordovaNetwork, $cordovaGeolocation) {
         $ionicPlatform.ready(function () {
 
             $scope.logout = function () {
@@ -47,68 +47,92 @@ angular.module('starter')
                 $state.go('login');
             };
 
-            $scope.helpMe = function () {
-                var alertPopup = $ionicPopup.alert({
-                    title: 'Ajuda',
-                    template: '-Duplo click no mapa para reportar posição <br/>' +
-                    '-Clique no botão inferior direito para centrar mapa na posição aproximada'
+            if ($cordovaNetwork.isOnline()) {
+
+                $scope.helpMe = function () {
+                    var alertPopup = $ionicPopup.alert({
+                        title: 'Ajuda',
+                        template: '-Duplo click no mapa para reportar posição <br/>' +
+                        '-Clique no botão inferior direito para centrar mapa na posição aproximada'
+                    });
+                };
+
+                var marker;
+
+                var map = L.map('map', {
+                    center: [CONFIG.map_center_lat, CONFIG.map_center_lng],
+                    minZoom: 5,
+                    zoom: CONFIG.map_zoom,
                 });
-            };
 
-            var marker;
+                L.tileLayer('http://{s}.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="http://osm.org/copyright" title="OpenStreetMap" target="_blank">OpenStreetMap</a> contributors | Tiles Courtesy of <a href="http://www.mapquest.com/" title="MapQuest" target="_blank">MapQuest</a> <img src="http://developer.mapquest.com/content/osm/mq_logo.png" width="16" height="16">',
+                    subdomains: ['otile4']
+                }).addTo(map);
 
-            var map = L.map('map', {
-                center: [CONFIG.map_center_lat, CONFIG.map_center_lng],
-                minZoom: 5,
-                zoom: CONFIG.map_zoom,
-            });
+                map.locate({setView: true, maxZoom: 18});
 
-            L.tileLayer('http://{s}.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="http://osm.org/copyright" title="OpenStreetMap" target="_blank">OpenStreetMap</a> contributors | Tiles Courtesy of <a href="http://www.mapquest.com/" title="MapQuest" target="_blank">MapQuest</a> <img src="http://developer.mapquest.com/content/osm/mq_logo.png" width="16" height="16">',
-                subdomains: ['otile4']
-            }).addTo(map);
+                // map.on('dblclick', onMapDblClick);
+                map.on('dblclick', onMapClick);
 
-            map.locate({setView: true, maxZoom: 18});
+                function onMapClick(e) {
+                    if (marker == undefined) {
+                        marker = L.marker([e.latlng.lat, e.latlng.lng]).addTo(map)
 
-            // map.on('dblclick', onMapDblClick);
-            map.on('dblclick', onMapClick);
+                    } else {
+                        marker.setLatLng([e.latlng.lat, e.latlng.lng]);
+                    }
 
-            function onMapClick(e) {
-                if (marker == undefined) {
-                    marker = L.marker([e.latlng.lat, e.latlng.lng]).addTo(map)
+                    map.panTo(e.latlng, {animate: true, duration: 5.0});
 
-                } else {
-                    marker.setLatLng([e.latlng.lat, e.latlng.lng]);
+                    var confirmPopup = $ionicPopup.confirm({
+                        title: 'Reportar',
+                        template: 'Confirma a posição?',
+                        cssClass: 'customPopup',
+                        okText: 'Confirmo', // String (default: 'OK'). The text of the OK button.
+                    });
+
+                    confirmPopup.then(function (res) {
+                        if (res) {
+                            window.location.reload(true);
+                            window.location = "#/main/form/" + e.latlng.lat + '/' + e.latlng.lng;
+                        }
+                    });
                 }
 
-                map.panTo(e.latlng, {animate: true, duration: 5.0});
-
-                var confirmPopup = $ionicPopup.confirm({
-                    title: 'Reportar',
-                    template: 'Confirma a posição?',
-                    cssClass: 'customPopup',
-                    okText: 'Confirmo', // String (default: 'OK'). The text of the OK button.
-                });
-
-                confirmPopup.then(function (res) {
-                    if (res) {
-                        window.location = "#/main/form/" + e.latlng.lat + '/' + e.latlng.lng;
-
-                    }
-                });
+                $scope.reloadRoute = function () {
+                    map.locate({setView: true, Zoom: 18});
+                };
             }
+            
+            if ($cordovaNetwork.isOffline()) {
+                var alertPopup = $ionicPopup.alert({
+                    title: 'Offline',
+                    template: 'Está em modo offline, não será reportado para o servidor'
+                });
 
-            $scope.reloadRoute = function () {
-                map.locate({setView: true, Zoom: 18});
-            };
+                var posOptions = {timeout: 10000, enableHighAccuracy: false};
+                $cordovaGeolocation.getCurrentPosition(posOptions)
+                    .then(function (position) {
+                        var lat = position.coords.latitude
+                        var long = position.coords.longitude
+                        window.location.reload(true);
+                        window.location = "#/main/form/" + lat + '/' + long;
+                    }, function (err) {
 
+                        $timeout(function () {
+                            $state.go('main.form', {}, {reload: true});
+                        }, 8000);
+
+                    });
+            }
         });
     })
 
     .controller('FormCtrl', function ($scope, $ionicPlatform, $cordovaFile,
                                       $cordovaCamera, $cordovaFileTransfer,
                                       $ionicPopup, $http, $stateParams,
-                                      $cordovaNetwork, $cordovaDialogs, CONFIG, AuthService, $cordovaNetwork) {
+                                      $cordovaNetwork, $cordovaDialogs, CONFIG, AuthService, $cordovaNetwork, $state, $timeout) {
         $ionicPlatform.ready(function () {
 
             $scope.helpMe = function () {
@@ -121,7 +145,6 @@ angular.module('starter')
             $scope.image = [];
             $scope.data = {};
             $scope.data.user = AuthService.user();
-
             if ($stateParams.lat != undefined) {
                 $http.get('http://nominatim.openstreetmap.org/reverse?format=json&lat=' + $stateParams.lat + '&lon=' + $stateParams.lng + '&zoom=18&addressdetails=1')
                     .success(function (response) {
@@ -203,7 +226,7 @@ angular.module('starter')
                                     title: 'Ocorrência',
                                     template: 'Foi reportado com sucesso a sua ocorrência'
                                 });
-                                state.go('main.map');
+
                             } else {
                                 var alertPopup = $ionicPopup.alert({
                                     title: 'Ocorrência',
@@ -223,11 +246,13 @@ angular.module('starter')
                             .then(function (success) {
                                 $cordovaFile.writeExistingFile(cordova.file.applicationStorageDirectory, "prevcrimeapp.txt", '\n' + angular.toJson($scope.data))
                                     .then(function (success) {
+                                        console.log(success);
                                         var alertPopup = $ionicPopup.alert({
                                             title: 'Modo offline',
-                                            template: 'A ocorrencia foi reportada em modo offline, quando tiver ligação será enviado para o servidor, onde terá de confirmar os dados 1'
+                                            template: 'A ocorrencia foi reportada em modo offline, quando tiver ligação será enviado para o servidor, onde terá de confirmar os dados'
                                         });
                                     }, function (error) {
+                                        console.log(error);
                                         var alertPopup = $ionicPopup.alert({
                                             title: 'Modo offline',
                                             template: 'Erro ao reportar em modo offline, tente novamente 1'
@@ -239,11 +264,13 @@ angular.module('starter')
                                     .then(function (success) {
                                         $cordovaFile.writeFile(cordova.file.applicationStorageDirectory, "prevcrimeapp.txt", '\n' + angular.toJson($scope.data), true)
                                             .then(function (success) {
+                                                console.log(success);
                                                 var alertPopup = $ionicPopup.alert({
                                                     title: 'Modo offline',
-                                                    template: error + 'A ocorrencia foi reportada em modo offline, quando tiver ligação será enviado para o servidor, onde terá de confirmar os dados 2'
+                                                    template: error + 'A ocorrencia foi reportada em modo offline, quando tiver ligação será enviado para o servidor, onde terá de confirmar os dados'
                                                 });
                                             }, function (error) {
+                                                console.log(error);
                                                 var alertPopup = $ionicPopup.alert({
                                                     title: 'Modo offline',
                                                     template: 'Erro ao reportar em modo offline, tente novamente 2'
@@ -256,9 +283,12 @@ angular.module('starter')
                                         });
                                     });
                             });
-
                     }
                 }
+                $timeout(function () {
+                    $state.go('main.map');
+                }, 8000);
+
             };
 
             function uploadFile(imageFullPath, id) {
@@ -278,7 +308,7 @@ angular.module('starter')
 
                         var alertPopup = $ionicPopup.alert({
                             title: 'Fotogafia',
-                            template: 'Erro ao enviar imagem'
+                            template: 'Erro ao enviar imagem' + angular.toJson(error)
                         });
                     });
             }
@@ -292,7 +322,6 @@ angular.module('starter')
             };
 
             $("#categoria").change(function () {
-
                 var categorie = $('#categoria').find(":selected").val();
 
                 var acessibilidade = {
