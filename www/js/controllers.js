@@ -116,7 +116,7 @@ angular.module('starter')
                     .then(function (position) {
                         var lat = position.coords.latitude
                         var long = position.coords.longitude
-                        window.location.reload(true);
+                        // window.location.reload(true);
                         window.location = "#/main/form/" + lat + '/' + long;
                     }, function (err) {
 
